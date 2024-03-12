@@ -1,4 +1,4 @@
-import React, {useState} from "react"; 
+import React, {useEffect, useState} from "react"; 
 
 const tempMovieData = [
   {
@@ -50,10 +50,22 @@ const tempWatchedData = [
 const average = (arr) =>
   arr.reduce((acc, cur, i, arr) => acc + cur / arr.length, 0);
 
+const KEY = "5172fd23";
+
 export default function App() {
-  const [query, setQuery] = useState("");
+  const [query, setQuery] = useState("interstellar");
   const [movies, setMovies] = useState(tempMovieData);
   const [watched, setWatched] = useState(tempWatchedData);
+
+  useEffect(function(){
+   async function fetchData(){
+      const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`)
+      const data = await res.json()
+      setMovies(data.Search)
+    } fetchData()
+  }, []
+  )
+ 
 
 
   return (
@@ -87,12 +99,12 @@ function Main({movies, watched}){
 
   return (
   <main className="main">
-  <Box movies={movies}><MovieList movies={movies}/></Box>
-  <Box watched={watched}><WatchedSummary watched={watched}/></Box>
+  <Box><MovieList movies={movies}/></Box>
+  <Box><WatchedSummary watched={watched}/></Box>
 </main>
 )}
 
-function Box ({movies, children}){
+function Box ({children}){
   const [isOpen, setIsOpen] = useState(true);
   return (
     <div className="box">
