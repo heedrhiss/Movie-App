@@ -58,13 +58,22 @@ export default function App() {
   const [watched, setWatched] = useState(tempWatchedData);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("")
+  const [selectedId, setSelectedId] = useState("12345")
+
+  function handleSelectedId(id){
+    setSelectedId(selectedId => selectedId=== id ? null : id)
+  }
+
+  function handleClose(){
+    setSelectedId(null)
+  }
 
   useEffect(function(){
-    setIsLoading(true)
    async function fetchData(){
-    
-    try {
+    setIsLoading(true);
+    setErrorMessage("");
 
+    try {
       const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`)
       
       const data = await res.json()
@@ -80,16 +89,19 @@ export default function App() {
         setIsLoading(false)
       }
     } 
+    if(query.length < 3){
+      setMovies([])
+      setErrorMessage("");
+      return
+    }
     fetchData();
   }, [query]
   )
  
-
-
   return (
     <>
       <NavBar query={query} setQuery={setQuery} movies={movies} />
-      <Main movies={movies} watched={watched} isLoading={isLoading} errorMessage={errorMessage} />
+      <Main movies={movies} watched={watched} isLoading={isLoading} errorMessage={errorMessage} selectedId={selectedId} setSelectedId={handleSelectedId} handleClose={handleClose}/>
     </>
   );
 }
@@ -113,16 +125,19 @@ function NavBar({query, setQuery, movies}){
       </nav>
 }
 
-function Main({movies, watched, isLoading, errorMessage}){
+function Main({movies, watched, isLoading, errorMessage, selectedId, setSelectedId, handleClose}){
 
   return (
   <main className="main">
   <Box>
   {isLoading && <Loader />}
-  {!isLoading && !errorMessage && <MovieList movies={movies}/>}
+  {!isLoading && !errorMessage && <MovieList movies={movies} selectedId={selectedId} setSelectedId={setSelectedId}/>}
   {errorMessage && <ErrorMessage message={errorMessage}/>}
   </Box>
-  <Box><WatchedSummary watched={watched}/></Box>
+  <Box>
+    {selectedId ? <MovieDetails selectedId={selectedId} handleClose={handleClose}/> :
+    <WatchedSummary watched={watched}/>}
+    </Box>
 </main>
 )}
 
@@ -141,11 +156,11 @@ function Box ({children}){
   )
 }
 
-function MovieList({movies}){
+function MovieList({movies, setSelectedId}){
   return(
     <ul className="list list-movies">
       {movies?.map((movie) => (
-        <li key={movie.imdbID}>
+        <li key={movie.imdbID} onClick={()=>setSelectedId(movie.imdbID)}>
           <img src={movie.Poster} alt={`${movie.Title} poster`} />
           <h3>{movie.Title}</h3>
           <div>
@@ -161,7 +176,7 @@ function MovieList({movies}){
 }
 
 function Loader(){
-  return <p className="loader">Loading....!</p>
+  return <p className="loader">Fetching data....!</p>
 }
 
 function ErrorMessage({message}){
@@ -221,4 +236,21 @@ function WatchedSummary({watched}){
         </ul>
       </>
   )
+}
+
+function MovieDetails({selectedId, handleClose}){
+  const [movie, setMovie] = useState({})
+  useEffect(function(){
+    async function movieDetails(){
+      const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&i=${selectedId}`)
+      const data = await res.json();
+      setMovie(data)
+    }
+    movieDetails()
+  }, [selectedId]);
+
+  return <div>
+    <button className="btn-back" onClick={handleClose}>&larr;</button>
+    {selectedId}
+  </div>
 }
