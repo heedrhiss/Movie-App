@@ -136,7 +136,7 @@ body {
 .list {
   list-style: none;
   padding: 0.8rem 0;
-  overflow: hidden;
+  /* overflow: scroll; */
 }
 
 .list-watched {
@@ -205,8 +205,6 @@ body {
 .btn-delete:hover {
   background-color: var(--color-red-dark);
 }
-
-/* ******* */
 
 .summary {
   padding: 2.2rem 2rem 1.8rem 3rem;

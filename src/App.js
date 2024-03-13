@@ -53,17 +53,35 @@ const average = (arr) =>
 const KEY = "5172fd23";
 
 export default function App() {
-  const [query, setQuery] = useState("interstellar");
+  const [query, setQuery] = useState("");
   const [movies, setMovies] = useState(tempMovieData);
   const [watched, setWatched] = useState(tempWatchedData);
+  const [isLoading, setIsLoading] = useState(false);
+  const [errorMessage, setErrorMessage] = useState("")
 
   useEffect(function(){
+    setIsLoading(true)
    async function fetchData(){
+    
+    try {
+
       const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`)
+      
       const data = await res.json()
+      if(!res.ok) throw new Error()
+      if(data.Response === "False") throw new Error()
+
       setMovies(data.Search)
-    } fetchData()
-  }, []
+}
+      catch(err){
+        setErrorMessage(err.message)
+      }
+      finally{
+        setIsLoading(false)
+      }
+    } 
+    fetchData();
+  }, [query]
   )
  
 
@@ -71,7 +89,7 @@ export default function App() {
   return (
     <>
       <NavBar query={query} setQuery={setQuery} movies={movies} />
-      <Main movies={movies} watched={watched} />
+      <Main movies={movies} watched={watched} isLoading={isLoading} errorMessage={errorMessage} />
     </>
   );
 }
@@ -79,7 +97,7 @@ export default function App() {
 function NavBar({query, setQuery, movies}){
  return <nav className="nav-bar">
         <div className="logo">
-          <span role="img">🍿</span>
+          <span role="img">🎬</span>
           <h1>HeedMovies</h1>
         </div>
         <input
@@ -95,11 +113,15 @@ function NavBar({query, setQuery, movies}){
       </nav>
 }
 
-function Main({movies, watched}){
+function Main({movies, watched, isLoading, errorMessage}){
 
   return (
   <main className="main">
-  <Box><MovieList movies={movies}/></Box>
+  <Box>
+  {isLoading && <Loader />}
+  {!isLoading && !errorMessage && <MovieList movies={movies}/>}
+  {errorMessage && <ErrorMessage message={errorMessage}/>}
+  </Box>
   <Box><WatchedSummary watched={watched}/></Box>
 </main>
 )}
@@ -138,6 +160,13 @@ function MovieList({movies}){
   )
 }
 
+function Loader(){
+  return <p className="loader">Loading....!</p>
+}
+
+function ErrorMessage({message}){
+  return <p className="error"><span>🚫 </span>{message}</p>
+}
 
 function WatchedSummary({watched}){
   const avgImdbRating = average(watched.map((movie) => movie.imdbRating));
