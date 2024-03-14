@@ -1,5 +1,6 @@
 import React, {useEffect, useState} from "react"; 
 import StarRating from "./StarRating";
+import { Loader, ErrorMessage } from "./Loader";
 
 const tempMovieData = [
   {
@@ -28,9 +29,9 @@ const tempMovieData = [
 const tempWatchedData = [
   {
     imdbID: "tt1375666",
-    Title: "Inception",
-    Year: "2010",
-    Poster:
+    title: "Inception",
+    year: "2010",
+    poster:
       "https://m.media-amazon.com/images/M/MV5BMjAxMzY3NjcxNF5BMl5BanBnXkFtZTcwNTI5OTM0Mw@@._V1_SX300.jpg",
     runtime: 148,
     imdbRating: 8.8,
@@ -38,9 +39,9 @@ const tempWatchedData = [
   },
   {
     imdbID: "tt0088763",
-    Title: "Back to the Future",
-    Year: "1985",
-    Poster:
+    title: "Back to the Future",
+    year: "1985",
+    poster:
       "https://m.media-amazon.com/images/M/MV5BZmU0M2Y1OGUtZjIxNi00ZjBkLTg1MjgtOWIyNThiZWIwYjRiXkEyXkFqcGdeQXVyMTQxNzMzNDI@._V1_SX300.jpg",
     runtime: 116,
     imdbRating: 8.5,
@@ -60,6 +61,10 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("")
   const [selectedId, setSelectedId] = useState(null)
+
+  function handleWatched(movie){
+    setWatched([...watched, movie])
+  }
 
   function handleSelectedId(id){
     setSelectedId(selectedId => selectedId=== id ? null : id)
@@ -102,7 +107,7 @@ export default function App() {
   return (
     <>
       <NavBar query={query} setQuery={setQuery} movies={movies} />
-      <Main movies={movies} watched={watched} isLoading={isLoading} errorMessage={errorMessage} selectedId={selectedId} setSelectedId={handleSelectedId} handleClose={handleClose}/>
+      <Main movies={movies} watched={watched} isLoading={isLoading} errorMessage={errorMessage} selectedId={selectedId} setSelectedId={handleSelectedId} handleClose={handleClose} handleWatched={handleWatched}/>
     </>
   );
 }
@@ -126,17 +131,18 @@ function NavBar({query, setQuery, movies}){
       </nav>
 }
 
-function Main({movies, watched, isLoading, errorMessage, selectedId, setSelectedId, handleClose}){
+function Main({movies, watched, isLoading, errorMessage, selectedId, setSelectedId, handleClose, handleWatched}){
+
 
   return (
   <main className="main">
-  <Box>
-  {isLoading && <Loader />}
+  <Box>  {isLoading && <Loader />}
   {!isLoading && !errorMessage && <MovieList movies={movies} selectedId={selectedId} setSelectedId={setSelectedId}/>}
   {errorMessage && <ErrorMessage message={errorMessage}/>}
   </Box>
+
   <Box>
-    {selectedId ? <MovieDetails selectedId={selectedId} handleClose={handleClose}/> :
+    {selectedId ? <MovieDetails selectedId={selectedId} handleClose={handleClose} handleWatched={handleWatched}/> :
     <WatchedSummary watched={watched}/>}
     </Box>
 </main>
@@ -176,14 +182,6 @@ function MovieList({movies, setSelectedId}){
   )
 }
 
-function Loader(){
-  return <p className="loader">Fetching data....!</p>
-}
-
-function ErrorMessage({message}){
-  return <p className="error"><span>🚫 </span>{message}</p>
-}
-
 function WatchedSummary({watched}){
   const avgImdbRating = average(watched.map((movie) => movie.imdbRating));
   const avgUserRating = average(watched.map((movie) => movie.userRating));
@@ -200,11 +198,11 @@ function WatchedSummary({watched}){
             </p>
             <p>
               <span>⭐️</span>
-              <span>{avgImdbRating}</span>
+              <span>{avgImdbRating.toFixed(2)}</span>
             </p>
             <p>
               <span>🌟</span>
-              <span>{avgUserRating}</span>
+              <span>{avgUserRating.toFixed(2)}</span>
             </p>
             <p>
               <span>⏳</span>
@@ -216,8 +214,8 @@ function WatchedSummary({watched}){
         <ul className="list list-movies">
           {watched.map((movie) => (
             <li key={movie.imdbID}>
-              <img src={movie.Poster} alt={`${movie.Title} poster`} />
-              <h3>{movie.Title}</h3>
+              <img src={movie.poster} alt={`${movie.title} poster`} />
+              <h3>{movie.title}</h3>
               <div>
                 <p>
                   <span>⭐️</span>
@@ -239,9 +237,26 @@ function WatchedSummary({watched}){
   )
 }
 
-function MovieDetails({selectedId, handleClose}){
+function MovieDetails({selectedId, handleClose, handleWatched}){
   const [movie, setMovie] = useState({})
   const [isLoading, setIsLoading] = useState(false)
+  const [userRating, setUserRating] = useState("");
+
+  function handleWatchedMovies(){
+    const newWatched = {
+      year,
+      title,
+      poster,
+      userRating,
+      imdbID: selectedId,
+      imdbRating: Number(ratings),
+      runtime: Number(runtime.split(" ")[0]),
+    }
+
+    handleWatched(newWatched)
+    handleClose()
+  }
+
   const {
     Title: title,
     Year: year,
@@ -281,7 +296,8 @@ function MovieDetails({selectedId, handleClose}){
     </header>
     <section>
       <div className="rating">
-      <StarRating size={20} maxRating={10}/>
+      <StarRating size={20} maxRating={10} onSetRating={setUserRating}/>
+      {userRating && <button className="btn-add" onClick={handleWatchedMovies}>+ Add to List</button>}
       </div>
       <em>{plot}</em>
       <p>Starring: {actors}</p>

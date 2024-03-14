@@ -293,6 +293,7 @@ body {
   background-color: var(--color-primary);
   color: var(--color-text);
   border: none;
+  width: 80%;
   border-radius: 10rem;
   font-size: 1.4rem;
   padding: 1rem;
