@@ -56,8 +56,8 @@ const KEY = "5172fd23";
 
 export default function App() {
   const [query, setQuery] = useState("");
-  const [movies, setMovies] = useState(tempMovieData);
-  const [watched, setWatched] = useState(tempWatchedData);
+  const [movies, setMovies] = useState([]);
+  const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("")
   const [selectedId, setSelectedId] = useState(null)
@@ -73,6 +73,7 @@ export default function App() {
   function handleClose(){
     setSelectedId(null)
   }
+
 
   useEffect(function(){
     const controller = new AbortController();
@@ -91,8 +92,9 @@ export default function App() {
       setMovies(data.Search)
 }
       catch(err){
+        if(err.name !== "AbortError"){
         setErrorMessage(err.message)
-      }
+        }}
       finally{
         setIsLoading(false)
       }
@@ -102,6 +104,7 @@ export default function App() {
       setErrorMessage("");
       return
     }
+    handleClose()
     fetchData();
     return function(){
       controller.abort()
@@ -254,7 +257,6 @@ function MovieDetails({selectedId, handleClose, handleWatched, watched}){
   const isWatched = watched.map(movie => movie.imdbID).includes(selectedId);
   const watchedRating = watched.find(movie => movie.imdbID === selectedId)?.userRating;
 
- 
 
   function handleWatchedMovies(){
     const newWatched = {
@@ -283,6 +285,19 @@ function MovieDetails({selectedId, handleClose, handleWatched, watched}){
     imdbRating: ratings,
     Director: director
   } = movie
+
+  useEffect(function (){
+    document.addEventListener("keydown",escape)
+
+    function escape (e){
+      if (e.code === "Escape"){
+        handleClose()
+      }
+    }
+    return function (e){
+      document.removeEventListener("keydown",escape);
+    }
+  }, [])
 
   useEffect(function(){
     async function movieDetails(){
