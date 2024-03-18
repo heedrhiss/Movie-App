@@ -1,4 +1,4 @@
-import React, {useEffect, useState} from "react"; 
+import React, {useEffect, useRef, useState} from "react"; 
 import StarRating from "./StarRating";
 import { Loader, ErrorMessage } from "./Loader";
 
@@ -57,10 +57,13 @@ const KEY = "5172fd23";
 export default function App() {
   const [query, setQuery] = useState("");
   const [movies, setMovies] = useState([]);
-  const [watched, setWatched] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("")
-  const [selectedId, setSelectedId] = useState(null)
+  const [selectedId, setSelectedId] = useState(null);
+  const [watched, setWatched] = useState(function(){
+    const ls = localStorage.getItem("watched");
+    return JSON.parse(ls);
+  });
 
   function handleWatched(movie){
     setWatched([...watched, movie])
@@ -74,6 +77,9 @@ export default function App() {
     setSelectedId(null)
   }
 
+  useEffect(function(){
+    localStorage.setItem("watched", JSON.stringify(watched))
+  },[watched])
 
   useEffect(function(){
     const controller = new AbortController();
@@ -90,7 +96,7 @@ export default function App() {
       if(data.Response === "False") throw new Error()
 
       setMovies(data.Search)
-}
+    }
       catch(err){
         if(err.name !== "AbortError"){
         setErrorMessage(err.message)
@@ -121,6 +127,11 @@ export default function App() {
 }
 
 function NavBar({query, setQuery, movies}){
+  const inputEl = useRef(null);
+  useEffect(function(){
+    inputEl.current.focus();
+  },[])
+  
  return <nav className="nav-bar">
         <div className="logo">
           <span role="img">🎬</span>
@@ -132,6 +143,7 @@ function NavBar({query, setQuery, movies}){
           placeholder="Search movies..."
           value={query}
           onChange={(e) => setQuery(e.target.value)}
+          ref={inputEl}
         />
         <p className="num-results">
           Found <strong>{movies.length}</strong> results
