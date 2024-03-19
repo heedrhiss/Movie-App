@@ -1,6 +1,8 @@
 import React, {useEffect, useRef, useState} from "react"; 
 import StarRating from "./StarRating";
 import { Loader, ErrorMessage } from "./Loader";
+import { useKey } from "./useKey";
+import { useLocalStorage } from "./useLocalStorage";
 
 const tempMovieData = [
   {
@@ -60,10 +62,8 @@ export default function App() {
   const [isLoading, setIsLoading] = useState(false);
   const [errorMessage, setErrorMessage] = useState("")
   const [selectedId, setSelectedId] = useState(null);
-  const [watched, setWatched] = useState(function(){
-    const ls = localStorage.getItem("watched");
-    return JSON.parse(ls);
-  });
+
+ const [watched, setWatched] = useLocalStorage([],'watched')
 
   function handleWatched(movie){
     setWatched([...watched, movie])
@@ -77,9 +77,6 @@ export default function App() {
     setSelectedId(null)
   }
 
-  useEffect(function(){
-    localStorage.setItem("watched", JSON.stringify(watched))
-  },[watched])
 
   useEffect(function(){
     const controller = new AbortController();
@@ -130,8 +127,13 @@ function NavBar({query, setQuery, movies}){
   const inputEl = useRef(null);
   useEffect(function(){
     inputEl.current.focus();
-  },[])
-  
+  },[]);
+
+  useKey('Enter', function(){
+    inputEl.current.focus()
+    setQuery('')
+  });
+
  return <nav className="nav-bar">
         <div className="logo">
           <span role="img">🎬</span>
@@ -298,18 +300,20 @@ function MovieDetails({selectedId, handleClose, handleWatched, watched}){
     Director: director
   } = movie
 
-  useEffect(function (){
-    document.addEventListener("keydown",escape)
+  useKey('Escape', handleClose)
 
-    function escape (e){
-      if (e.code === "Escape"){
-        handleClose()
-      }
-    }
-    return function (e){
-      document.removeEventListener("keydown",escape);
-    }
-  }, [])
+  // useEffect(function (){
+  //   document.addEventListener("keydown",escape)
+
+  //   function escape (e){
+  //     if (e.code === "Escape"){
+  //       handleClose()
+  //     }
+  //   }
+  //   return function (e){
+  //     document.removeEventListener("keydown",escape);
+  //   }
+  // }, [])
 
   useEffect(function(){
     async function movieDetails(){
