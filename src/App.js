@@ -79,14 +79,16 @@ export default function App() {
 
 
   useEffect(function(){
-    const controller = new AbortController();
+    // const controller = new AbortController();
 
    async function fetchData(){
     setIsLoading(true);
     setErrorMessage("");
 
     try {
-      const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`, {signal: controller.signal})
+      // const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`, {signal: controller.signal})
+
+      const res = await fetch(`http://www.omdbapi.com/?apikey=${KEY}&s=${query}`)
       
       const data = await res.json()
       if(!res.ok) throw new Error()
@@ -110,7 +112,7 @@ export default function App() {
     handleClose()
     fetchData();
     return function(){
-      controller.abort()
+      // controller.abort()
     }
   }, [query]
   )
